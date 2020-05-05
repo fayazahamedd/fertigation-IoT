@@ -1,0 +1,177 @@
+We are starting with the BareMinimum Sketch found in the IDE, it should look something like this:
+
+void setup() {
+  // put your setup code here, to run once:
+}
+void loop() {
+  // put your main code here, to run repeatedly:  
+}
+ 
+So first we will need some variables to hold values:
+
+int flowPin = 2;    //This is the input pin on the Arduino
+double flowRate;    //This is the value we intend to calculate. 
+volatile int count; //This integer needs to be set as volatile to ensure it updates correctly during the interrupt process.  
+
+void setup() {
+  // put your setup code here, to run once:
+}
+void loop() {
+  // put your main code here, to run repeatedly:  
+}
+ 
+The volatile integer “count” is important as it will be where we store the number of pulses during each second we test. The volatile part may be new to many of you, and it is there to ensure the variable updates correctly during the Interrupt Service Routine. Aside from that, it acts just like any other integer. We will want it to increment every single time there is a pulse received which means we need to create a new function that the interrupt will run when a pulse is received:
+
+int flowPin = 2;    //This is the input pin on the Arduino
+double flowRate;    //This is the value we intend to calculate. 
+volatile int count; //This integer needs to be set as volatile to ensure it updates correctly during the interrupt process.  
+
+void setup() {
+  // put your setup code here, to run once:
+}
+void loop() {
+  // put your main code here, to run repeatedly:  
+}
+
+void Flow()
+{
+   count++; //Every time this function is called, increment "count" by 1
+}
+
+ 
+The “++” following the variable means every time the program runs this line it will add 1 to that variable – great for counting!
+
+The interrupt function will be calling the “Flow” function so lets go ahead and add the interrupt to the setup section of code:
+
+int flowPin = 2;    //This is the input pin on the Arduino
+double flowRate;    //This is the value we intend to calculate. 
+volatile int count; //This integer needs to be set as volatile to ensure it updates correctly during the interrupt process.  
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(flowPin, INPUT);           //Sets the pin as an input
+  attachInterrupt(0, Flow, RISING);  //Configures interrupt 0 (pin 2 on the Arduino Uno) to run the function "Flow"  
+
+}
+void loop() {
+  // put your main code here, to run repeatedly:  
+}
+
+void Flow()
+{
+   count++; //Every time this function is called, increment "count" by 1
+}
+
+ 
+So that last little bit may require a little more explanation: The first thing we should be clear about is on the Arduino Uno pin 2 is Interrupt 0, so both lines of code we have added are referring to the same physical pin on the Arduino. Basically the pin needs to be set as an input before setting up the interrupt.
+
+On the next line we are configuring the interrupt by using “attachInterrupt”. To better illustrate how this line works, think of it as this:
+
+attachInterrupt(interrupt number, the function you would like to run when triggered, what you would like to set as the trigger).
+
+So we are using interrupt 0 to trigger “Flow” when the pin changes from low to high (when a pulse from the sensor arrives). The complete list of triggers are available on the Arduino Learning Center
+
+Time to start writing the main code that will run continuously in the loop:
+
+int flowPin = 2;    //This is the input pin on the Arduino
+double flowRate;    //This is the value we intend to calculate. 
+volatile int count; //This integer needs to be set as volatile to ensure it updates correctly during the interrupt process.  
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(flowPin, INPUT);           //Sets the pin as an input
+  attachInterrupt(0, Flow, RISING);  //Configures interrupt 0 (pin 2 on the Arduino Uno) to run the function "Flow"  
+
+}
+void loop() {
+  // put your main code here, to run repeatedly:  
+  count = 0;      // Reset the counter so we start counting from 0 again
+  interrupts();   //Enables interrupts on the Arduino
+  delay (1000);   //Wait 1 second 
+  noInterrupts(); //Disable the interrupts on the Arduino
+}
+
+void Flow()
+{
+   count++; //Every time this function is called, increment "count" by 1
+}
+
+ 
+OK, half way there. Since the loop runs over and over again we need reset our variable “count” to 0 at the beginning, we do not want the number of pulses from the last loop carrying forward. The next line enables the interrupts, meaning we now start counting how many pulses the sensor sends out. On the following line we delay the code for 1000ms (1 Second) to give us time to count pulses and on the last line we disable the interrupts to stop counting. Any pulses from the sensor are ignored before the interrupt is enabled and after it is disabled so with this code we will take a very accurate count of pulses over a period of 1 second.
+
+Let’s do some math to turn the number of pulses per second to a more useful unit of measure:
+
+int flowPin = 2;    //This is the input pin on the Arduino
+double flowRate;    //This is the value we intend to calculate. 
+volatile int count; //This integer needs to be set as volatile to ensure it updates correctly during the interrupt process.  
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(flowPin, INPUT);           //Sets the pin as an input
+  attachInterrupt(0, Flow, RISING);  //Configures interrupt 0 (pin 2 on the Arduino Uno) to run the function "Flow"  
+
+}
+void loop() {
+  // put your main code here, to run repeatedly:  
+  count = 0;      // Reset the counter so we start counting from 0 again
+  interrupts();   //Enables interrupts on the Arduino
+  delay (1000);   //Wait 1 second 
+  noInterrupts(); //Disable the interrupts on the Arduino
+  
+  //Start the math
+  flowRate = (count * 2.25);        //Take counted pulses in the last second and multiply by 2.25mL 
+  flowRate = flowRate * 60;         //Convert seconds to minutes, giving you mL / Minute
+  flowRate = flowRate / 1000;       //Convert mL to Liters, giving you Liters / Minute
+}
+
+void Flow()
+{
+   count++; //Every time this function is called, increment "count" by 1
+}
+
+ 
+Those last 3 lines were just a unit conversion.
+
+Pulses per second * 2.25 milliliters per Pulse = milliliters/Second
+mL/Second * 60 Seconds = mL/Minute
+mL/Minute / 1000 = Liters/Minute
+
+So flowRate = Liters/Minute … Perfect! Now we just need to write it to Serial so we can actually see the data:
+
+int flowPin = 2;    //This is the input pin on the Arduino
+double flowRate;    //This is the value we intend to calculate. 
+volatile int count; //This integer needs to be set as volatile to ensure it updates correctly during the interrupt process.  
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(flowPin, INPUT);           //Sets the pin as an input
+  attachInterrupt(0, Flow, RISING);  //Configures interrupt 0 (pin 2 on the Arduino Uno) to run the function "Flow"  
+  Serial.begin(9600);  //Start Serial
+}
+void loop() {
+  // put your main code here, to run repeatedly:  
+  count = 0;      // Reset the counter so we start counting from 0 again
+  interrupts();   //Enables interrupts on the Arduino
+  delay (1000);   //Wait 1 second 
+  noInterrupts(); //Disable the interrupts on the Arduino
+  
+  //Start the math
+  flowRate = (count * 2.25);        //Take counted pulses in the last second and multiply by 2.25mL 
+  flowRate = flowRate * 60;         //Convert seconds to minutes, giving you mL / Minute
+  flowRate = flowRate / 1000;       //Convert mL to Liters, giving you Liters / Minute
+
+  Serial.println(flowRate);         //Print the variable flowRate to Serial
+}
+
+void Flow()
+{
+   count++; //Every time this function is called, increment "count" by 1
+}
+
+ 
+In the Setup we are starting the Serial connection at a rate of 9600 Baud – the default speed. At the bottom of the loop we are printing a line on the Serial connection containing the result of our math. All Done!
+
+Step 10 – Upload The Code And Test
+finalcode1
+
+Now that all of the code has been written it can be uploaded to your Arduino! Click “Upload” button in the top left corner of the Arduino IDE and it should upload without any issues. Next, click the “Serial Monitor” button in the top right corner (it looks like a magnifying glass). After a few seconds you should start to see a stream of data appear in the window – that is your flow in Liters/Minute.
