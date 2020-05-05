@@ -1,0 +1,28 @@
+If you are tired of typing all these AT Commands in order to connect ESP8266 WiFi Module to a WIFi Network, then there is an alternative way. In this method, I’ll be programming the ESP8266 WiFi Module (which means the AT Command Firmware will be erased). The code for this is shown below.
+
+include "ESP8266WiFi.h"
+
+const char* ssid = "ssid"; //Enter SSID
+const char* password = "password"; //Enter Password
+
+void setup(void)
+{ 
+  Serial.begin(115200);
+  // Connect to WiFi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+     delay(500);
+     Serial.print("*");
+  }
+  
+  Serial.println("");
+  Serial.println("WiFi connection Successful");
+  Serial.print("The IP Address of ESP8266 Module is: ");
+  Serial.print(WiFi.localIP());// Print the IP address
+}
+
+void loop() 
+{
+  // EMPTY
+}
