@@ -1,0 +1,18 @@
+Thanks to the guys those who ported the Esp8266 into Arduino IDE and helping all the arduino users happy to the core. Yes it's been long time since they did and this post is bit later to thanks the good hearted work by the guys out there.
+
+Lets begin with Installing the Esp8266 support for the Arduino and see how to blink an LED ( the hello world in the electronics )
+
+check out the video to know step by step tutorial on how to get started with our favourite chip Esp8266
+
+
+
+
+<p>void setup() {<br>  // initialize digital pin 13 as an output.
+  pinMode(13, OUTPUT);
+}</p><p>// the loop function runs over and over again forever
+void loop() {
+  digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(1000);              // wait for a second
+  digitalWrite(13, LOW);    // turn the LED off by making the voltage LOW
+  delay(1000);              // wait for a second
+}</p>
